@@ -94,7 +94,7 @@ function modelReady() {
 
 function draw() {
 
-	frameRate(20);
+	frameRate(30);
 
 	image(video, 0, 0);
 	filter(THRESHOLD);
@@ -147,13 +147,16 @@ function mousePressed(){
 	else if (recordingState == 1) {
 		recorder.stop();
 	  console.log('Recording Stopped! Click will over-write recording and start recording again.');
-		var s = saveSound(soundFile, 'mySound.wav');
+		//var s = saveSound(soundFile, 'mySound.wav');
 
-    console.log(s);
+    audio_data = soundFile.buffer.getChannelData(0);
+		console.log(audio_data)
+		//saveJson(soundFile);
 		recordingState = 0;
 
 		// Calling python API for getting onset timestamps
-		sendData('http://127.0.0.1:8888/audio', '/Users/aditi/Desktop/Freelance/speaking_finger/audios/mySound.wav')
+		sendDataJson('http://127.0.0.1:8888/audio', audio_data);
+		// sendData('http://127.0.0.1:8888/audio', '/Users/aditi/Desktop/Freelance/speaking_finger/audios/mySound.wav')
 	}
 
 }
@@ -169,10 +172,32 @@ function sendData(url, audio_file) {
 
   fetch(url, {
     method: 'POST',
+		mode: 'no-cors',
     body: formData
   }).then(function (response) {
      console.log(response)
   });
+}
+
+function sendDataJson(url, audio_data){
+
+	// TODO: DEBUG WHY THE JSON IS MAKING THE AUDIO DATA A DICTIONARY
+
+	fetch(url, {
+	    method: 'POST',
+			mode: 'no-cors',
+	    body:  JSON.stringify({
+					data: audio_data
+			}),// string or object
+	    headers:{
+	    'Content-Type': 'application/json'
+	    }
+	})
+	.then(function(response){
+		  console.log("-------- Response ----------")
+      console.log(response)
+			// return response.json();
+	});
 }
 
 // A function to draw ellipses over the detected keypoints

@@ -7,6 +7,7 @@ import os
 import librosa
 import time
 import numpy as np
+import json
 
 from tornado.options import define, options
 
@@ -31,25 +32,31 @@ class SoundHandler(tornado.web.RequestHandler):
         self.write("Hello, world")
 
     def post(self):
-        if 'audio' not in self.request.files:
-            self.finish({'Error': "No audio provided"})
-        audio_filename = str(current_milli_time()) + '.wav'
-        audio_file = os.path.join('/Users/aditi/Desktop/Freelance/speaking_finger/audios', audio_filename)
-        audio = self.request.files['audio'][0]
-        with open(audio_file, 'wb') as f:
-            f.write(audio['body'])
+        # if 'audio' not in self.request.files:
+        #     self.finish({'Error': "No audio provided"})
+        # print(self.request.body)
+        json_body = tornado.escape.json_decode(self.request.body)
+        audio_data_dict = json_body['data']
 
-        SAMPLE_RATE = 16000
-        sound, sr = librosa.load(audio_file)
-        SAMPLE_RATE = sr
+        audio_data = list(audio_data_dict.values())
+        print(audio_data[1:10])
+        # audio_filename = str(current_milli_time()) + '.wav'
+        # audio_file = os.path.join('/Users/aditi/Desktop/Freelance/speaking_finger/audios', audio_filename)
+        # with open(audio_file, 'wb') as f:
+        #     f.write(audio_data)
 
-        o_env = librosa.onset.onset_strength(sound, sr=SAMPLE_RATE)
+        SAMPLE_RATE = 44100
+        # sound, sr = librosa.load(audio_file)
+        # SAMPLE_RATE = sr
+
+        o_env = librosa.onset.onset_strength(np.asarray(audio_data), sr=SAMPLE_RATE)
         onset_frames = librosa.onset.onset_detect(onset_envelope=o_env, sr=SAMPLE_RATE)
         times = librosa.frames_to_time(onset_frames, sr=SAMPLE_RATE)
 
-        # print(times)
+        print(times)  
+        # times.tolist()
 
-        self.write({"times_array": times})
+        self.write({"times_array": "siddharth"})
 
 def main():
     tornado.options.parse_command_line()
