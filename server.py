@@ -39,7 +39,6 @@ class SoundHandler(tornado.web.RequestHandler):
         audio_data_dict = json_body['data']
 
         audio_data = list(audio_data_dict.values())
-        print(audio_data[1:10])
         # audio_filename = str(current_milli_time()) + '.wav'
         # audio_file = os.path.join('/Users/aditi/Desktop/Freelance/speaking_finger/audios', audio_filename)
         # with open(audio_file, 'wb') as f:
@@ -53,10 +52,10 @@ class SoundHandler(tornado.web.RequestHandler):
         onset_frames = librosa.onset.onset_detect(onset_envelope=o_env, sr=SAMPLE_RATE)
         times = librosa.frames_to_time(onset_frames, sr=SAMPLE_RATE)
 
-        print(times)  
+        # print(times)  
         # times.tolist()
 
-        self.write({"times_array": "siddharth"})
+        self.write({"times_array": times.tolist()})
 
 def main():
     tornado.options.parse_command_line()

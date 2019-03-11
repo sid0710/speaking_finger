@@ -150,12 +150,12 @@ function mousePressed(){
 		//var s = saveSound(soundFile, 'mySound.wav');
 
     audio_data = soundFile.buffer.getChannelData(0);
-		console.log(audio_data)
+		// console.log(audio_data)
 		//saveJson(soundFile);
 		recordingState = 0;
 
 		// Calling python API for getting onset timestamps
-		sendDataJson('http://127.0.0.1:8888/audio', audio_data);
+		sendDataJson('http://18.191.133.216/audio', audio_data);
 		// sendData('http://127.0.0.1:8888/audio', '/Users/aditi/Desktop/Freelance/speaking_finger/audios/mySound.wav')
 	}
 
@@ -194,9 +194,9 @@ function sendDataJson(url, audio_data){
 	    }
 	})
 	.then(function(response){
-		  console.log("-------- Response ----------")
-      console.log(response)
-			// return response.json();
+			return response.json();
+	}).then(function(data){
+    console.log(data["times_array"]);
 	});
 }
 
