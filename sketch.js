@@ -94,7 +94,7 @@ function modelReady() {
 
 function draw() {
 
-	frameRate(30);
+	frameRate(20);
 
 	image(video, 0, 0);
 	filter(THRESHOLD);
