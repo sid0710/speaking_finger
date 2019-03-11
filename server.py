@@ -29,7 +29,7 @@ class Application(tornado.web.Application):
 
 class SoundHandler(tornado.web.RequestHandler):
     def get(self):
-        self.write("Hello, world")
+        self.render('index.html')
 
     def post(self):
         # if 'audio' not in self.request.files:
