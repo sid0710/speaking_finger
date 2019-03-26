@@ -6,6 +6,7 @@ let poses = [];
 let mouth;
 let center, leftEye, rightEye;
 let nose;
+let fingerPointer;
 
 var recordingState = 0;
 var mic, recorder, soundFile;
@@ -16,6 +17,14 @@ let continuous = true;
 let interim = false;
 
 var vol = 0;
+var onset_times;
+let onset_flag = false
+var split_sounds = [];
+var number_of_particles = 0;
+
+let units_of_sound = [];
+
+var frameAtResponse;
 
 
 function preload(){
@@ -32,6 +41,7 @@ function setup() {
 	leftEye = createVector(0,0);
 	rightEye = createVector(0,0);
 	mouth = createVector(0,0);
+	fingerPointer = createVector(0,0);
 
 
 
@@ -73,6 +83,7 @@ function gotPoses(pose) {
 
 		leftEye = createVector(pose[0].pose.keypoints[1].position.x, pose[0].pose.keypoints[1].position.y)
 		rightEye = createVector(pose[0].pose.keypoints[2].position.x, pose[0].pose.keypoints[2].position.y)
+		fingerPointer = createVector(pose[0].pose.keypoints[10].position.x, pose[0].pose.keypoints[10].position.y)
 
 	  center = p5.Vector.sub(leftEye, rightEye).mult(0.5);
 		center.x = (center.x + rightEye.x);
@@ -100,6 +111,8 @@ function draw() {
 	filter(THRESHOLD);
 
 
+  noStroke();
+
   // Print face keypoints from pose estimation
 	fill(255, 0, 0);
 	ellipse(noseX, noseY, 20);
@@ -110,19 +123,41 @@ function draw() {
 	ellipse(leftEye.x, leftEye.y, 20);
 	ellipse(rightEye.x, rightEye.y, 20);
 
+	fill(255, 0, 0);
+	ellipse(fingerPointer.x, fingerPointer.y, 20);
+
 
 	// Print Sound Waves if being recorded
 
-  if(mic.enabled){
-	 vol = mic.getLevel();
-	 fill(127);
-	 var h = map(vol, 0, 1, height, 0);
-   ellipse(100,100, 50, 50);
-  }
+  // if(mic.enabled){
+	//  vol = mic.getLevel();
+	//  fill(127);
+	//  var h = map(vol, 0, 1, height, 0);
+  //  ellipse(100,100, 50, 50);
+  // }
 
 	// Draw the pose
   //drawKeypoints();
-  //drawSkeleton();
+	//drawSkeleton();
+	
+
+	// Draw the units of onsets
+	if (onset_flag){
+		console.log(onset_times);
+		onset_flag = false;
+		splitSounds();
+	}
+
+
+	if(number_of_particles > 0){
+		// Draw the particles
+		console.log("Drawing particles");
+		for(let i = 0; i < number_of_particles; i++){
+			units_of_sound[i].show();
+			units_of_sound[i].update();
+		}
+	}
+
 
 }
 
@@ -196,7 +231,15 @@ function sendDataJson(url, audio_data){
 	.then(function(response){
 			return response.json();
 	}).then(function(data){
-    console.log(data["times_array"]);
+		frameAtResponse = frameCount;
+		console.log("Response Received")
+		onset_times = data["times_array"];
+		onset_flag = true;
+		number_of_particles = onset_times.length;
+		for( let i = 0; i < number_of_particles; i++){
+			units_of_sound[i] = new Particles();
+		}
+		console.log(units_of_sound);
 	});
 }
 
@@ -239,3 +282,59 @@ function touchStarted() {
     getAudioContext().resume();
   }
 }
+
+function splitSounds(){
+	console.log("Splitting Sounds")
+	// console.log(onset_times);
+
+	for(let i = 0; i < onset_times.length - 1; i++){
+		split_sounds[i] = [];
+		for(let j = onset_times[i]; j < onset_times[i+1]; j++){
+			split_sounds[i][j - int(onset_times[i])] = audio_data[j];
+		}
+		//console.log("sound" + i)
+		//console.log(split_sounds[i]);
+	}
+  let result = (frameCount - frameAtResponse)/20;
+	console.log("Number of secs since response" + result );
+
+
+}
+
+
+class Particles{
+	constructor(){
+		this.x = mouth.x + random(0,100);
+		this.y = mouth.y + random(0,100);
+		this.r = random(5,20);
+
+		this.sound = 0;
+	}
+	
+	update(){
+		this.x = this.x + random(-5, 5);
+		this.y = this.y + random(-5, 5);
+
+	}
+
+	show(){
+		stroke(255);
+		strokeWeight(4);
+
+	  fill(0,100,255);
+		ellipse(this.x, this.y, this.r)
+	}
+
+	add(i, x, y, r){
+
+		this.x = x;
+		this.y = y;
+		this.r = r;
+		this.sound = i;
+
+	}
+
+	connect_Sound(i){
+		this.sound = i
+	}
+};

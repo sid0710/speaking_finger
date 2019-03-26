@@ -51,11 +51,10 @@ class SoundHandler(tornado.web.RequestHandler):
         o_env = librosa.onset.onset_strength(np.asarray(audio_data), sr=SAMPLE_RATE)
         onset_frames = librosa.onset.onset_detect(onset_envelope=o_env, sr=SAMPLE_RATE)
         times = librosa.frames_to_time(onset_frames, sr=SAMPLE_RATE)
-
-        # print(times)  
-        # times.tolist()
-
-        self.write({"times_array": times.tolist()})
+        times1 = [0] + times.tolist()
+        times1 = [int(i * SAMPLE_RATE) for i in times1] 
+        
+        self.write({"times_array": times1})
 
 def main():
     tornado.options.parse_command_line()
